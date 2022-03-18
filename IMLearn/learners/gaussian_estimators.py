@@ -3,10 +3,7 @@ from __future__ import annotations
 import math
 
 import numpy as np
-from numpy.linalg import inv, det, slogdet
-from plotly.graph_objs import Scatter
-from plotly.subplots import make_subplots
-from pygments.lexers import go
+import plotly.graph_objects as go
 
 
 class UnivariateGaussian:
@@ -205,9 +202,10 @@ class MultivariateGaussian:
 if __name__ == '__main__':
 
     """ Question No. 1 """
-
     mu, var, num_of_samples = 10, 1, 1000
     data = np.random.normal(mu, var, num_of_samples)
+
     estimator = UnivariateGaussian().fit(data)
+    print(f"({estimator.mu_}, {estimator.var_})")
 
    
