@@ -208,4 +208,17 @@ if __name__ == '__main__':
     estimator = UnivariateGaussian().fit(data)
     print(f"({estimator.mu_}, {estimator.var_})")
 
-   
+    """ Question No. 2 """
+    x = np.arange(10, 1010, 10)  # x = [10, 20,..., 100, 110, ..., 1000]
+    y = []
+    for i in x:
+        estimator.fit(data[:i])
+        y.append(math.fabs(mu - estimator.mu_))
+
+    go.Figure(go.Scatter(x=x, y=y, ),
+              layout=go.Layout(title=r"$\text{absolute distance between the estimated and true value of the \
+                                        expectation, as a function of the sample size}$",
+                               xaxis_title=r"$\text{number of samples}$",
+                               yaxis_title="r$|\mu - \hat\mu|$", )).show()
+
+    
