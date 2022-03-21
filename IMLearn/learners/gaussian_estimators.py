@@ -150,8 +150,6 @@ class MultivariateGaussian:
         """
         self.mu_ = np.mean(X, axis=0)
         self.cov_ = np.cov(X.T, bias=False)  # we use the unbiased estimator
-        self.fitted_ = True
-        return self
 
     def pdf(self, X: np.ndarray):
         """
