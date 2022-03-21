@@ -1,9 +1,7 @@
 from __future__ import annotations
 
-import math
-
 import numpy as np
-import plotly.graph_objects as go
+from numpy.linalg import inv, det, slogdet
 
 
 class UnivariateGaussian:
@@ -59,6 +57,7 @@ class UnivariateGaussian:
         # if the estimator is biased the degrees of freedom is 0
         # and when the estimator is unbiased then the degrees of freedom is 1
         self.var_ = X.var(ddof=0) if self.biased_ else X.var(ddof=1)
+        self.fitted_ = True
         return self
 
     def pdf(self, X: np.ndarray) -> np.ndarray:
@@ -81,8 +80,7 @@ class UnivariateGaussian:
         """
         if not self.fitted_:
             raise ValueError("Estimator must first be fitted before calling `pdf` function")
-
-        return np.exp(np.power((X - self.mu_), 2) / (2 * self.var_)) / math.sqrt(2 * math.pi * self.var_)
+        return (1.0 / (np.sqrt(2 * np.pi * self.var_))) * np.exp((np.power(X - self.mu_, 2) / -2 * self.var_))
 
     @staticmethod
     def log_likelihood(mu: float, sigma: float, X: np.ndarray) -> float:
@@ -103,7 +101,8 @@ class UnivariateGaussian:
         log_likelihood: float
             log-likelihood calculated
         """
-        return math.log(2 * math.pi * (sigma ** 2)) * (X.size / 2) + np.sum(np.power((X - mu), 2)) / (2 * (sigma ** 2))
+        d = X.size
+        return np.log(2 * np.pi * (sigma ** 2)) * (d / 2) + np.sum(np.power((X - mu), 2)) / (2 * (sigma ** 2))
 
 
 class MultivariateGaussian:
@@ -150,8 +149,8 @@ class MultivariateGaussian:
         Sets `self.mu_`, `self.cov_` attributes according to calculated estimation.
         Then sets `self.fitted_` attribute to `True`
         """
-        raise NotImplementedError()
-
+        self.mu_ = np.mean(X, axis=0)
+        self.cov_ = np.flip(np.cov(X.T, bias=False), axis=0)  # we use the unbiased estimator
         self.fitted_ = True
         return self
 
@@ -175,7 +174,29 @@ class MultivariateGaussian:
         """
         if not self.fitted_:
             raise ValueError("Estimator must first be fitted before calling `pdf` function")
-        raise NotImplementedError()
+
+        d = X.shape[1]
+        cov_det = np.linalg.det(self.cov_)
+        pi2_power_d = np.power(np.pi*2, d)
+
+        def _single_pdf(x: np.ndarray):
+            """
+            Calculate PDF of single sample under Gaussian model with fitted estimators
+
+            Parameters
+            ----------
+            x: ndarray of shape (n_features, )
+                Sample to calculate PDF for
+
+            Returns
+            -------
+            pdf: float
+                PDF of single sample
+            """
+            mult = (x - self.mu_).T @ np.linalg.inv(self.cov_) @ (x - self.mu_)
+            return (1/np.sqrt(pi2_power_d * cov_det)) * np.exp(-0.5 * mult)
+
+        return np.apply_along_axis(_single_pdf, 1, X)
 
     @staticmethod
     def log_likelihood(mu: np.ndarray, cov: np.ndarray, X: np.ndarray) -> float:
@@ -196,29 +217,8 @@ class MultivariateGaussian:
         log_likelihood: float
             log-likelihood calculated over all input data and under given parameters of Gaussian
         """
-        raise NotImplementedError()
-
-
-if __name__ == '__main__':
-
-    """ Question No. 1 """
-    mu, var, num_of_samples = 10, 1, 1000
-    data = np.random.normal(mu, var, num_of_samples)
-
-    estimator = UnivariateGaussian().fit(data)
-    print(f"({estimator.mu_}, {estimator.var_})")
-
-    """ Question No. 2 """
-    x = np.arange(10, 1010, 10)  # x = [10, 20,..., 100, 110, ..., 1000]
-    y = []
-    for i in x:
-        estimator.fit(data[:i])
-        y.append(math.fabs(mu - estimator.mu_))
-
-    go.Figure(go.Scatter(x=x, y=y, ),
-              layout=go.Layout(title=r"$\text{absolute distance between the estimated and true value of the \
-                                        expectation, as a function of the sample size}$",
-                               xaxis_title=r"$\text{number of samples}$",
-                               yaxis_title="r$|\mu - \hat\mu|$", )).show()
-
-    
+        m, d = X.shape
+        matrix_sum = np.sum((X - mu) @ np.linalg.inv(cov) * (X - mu))
+        (log_sign, log_det) = np.linalg.slogdet(cov)
+        log_sum = m * d * np.log(2 * np.pi) - (m * log_sign * log_det)
+        return -0.5 * (log_sum + matrix_sum)
