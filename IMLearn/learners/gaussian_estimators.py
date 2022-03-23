@@ -102,7 +102,7 @@ class UnivariateGaussian:
             log-likelihood calculated
         """
         d = X.size
-        return np.log(2 * np.pi * (sigma ** 2)) * (d / 2) + np.sum(np.power((X - mu), 2)) / (2 * (sigma ** 2))
+        return np.log((1/(2 * np.pi * (sigma ** 2)) ** (d / 2))) - np.sum(np.power((X - mu), 2)) / (2 * (sigma ** 2))
 
 
 class MultivariateGaussian:
@@ -150,7 +150,7 @@ class MultivariateGaussian:
         Then sets `self.fitted_` attribute to `True`
         """
         self.mu_ = np.mean(X, axis=0)
-        self.cov_ = np.flip(np.cov(X.T, bias=False), axis=0)  # we use the unbiased estimator
+        self.cov_ = np.cov(X.T, bias=False)  # we use the unbiased estimator
         self.fitted_ = True
         return self
 
