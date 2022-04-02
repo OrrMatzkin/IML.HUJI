@@ -3,6 +3,7 @@ from typing import NoReturn
 from IMLearn.base import BaseEstimator
 import numpy as np
 from numpy.linalg import pinv
+import IMLearn.metrics as metrics
 
 
 class LinearRegression(BaseEstimator):
@@ -92,7 +93,8 @@ class LinearRegression(BaseEstimator):
         loss : float
             Performance under MSE loss function
         """
-        raise NotImplementedError()
+        # todo: should I round the result ?
+        return metrics.mean_square_error(y, self._predict(X))
 
 
 if __name__ == '__main__':
@@ -103,5 +105,9 @@ if __name__ == '__main__':
     y = np.array([4, 13])
     es = LinearRegression()
     es.fit(X, y)
+    print(y)
+    # print(f"y -> {y}")
     print(es.coefs_)  # should be [1,-2]
-    print(es.predict(X))  # should be [4,13]
+    # print(f"predict y ->  {es.predict(X)} ")# should be [4,13]
+    print(es.loss(X, y))
+    # print(f"y - predict y -> {np.round(y - es.predict(X))}")
