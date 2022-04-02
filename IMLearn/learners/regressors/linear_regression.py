@@ -73,7 +73,7 @@ class LinearRegression(BaseEstimator):
         responses : ndarray of shape (n_samples, )
             Predicted responses of given samples
         """
-        raise NotImplementedError()
+        return X @ self.coefs_
 
     def _loss(self, X: np.ndarray, y: np.ndarray) -> float:
         """
@@ -103,4 +103,5 @@ if __name__ == '__main__':
     y = np.array([4, 13])
     es = LinearRegression()
     es.fit(X, y)
-    print(es.coefs_) # should be [1,-2]
+    print(es.coefs_)  # should be [1,-2]
+    print(es.predict(X))  # should be [4,13]
