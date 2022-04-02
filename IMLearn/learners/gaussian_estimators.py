@@ -58,6 +58,7 @@ class UnivariateGaussian:
         # and when the estimator is unbiased then the degrees of freedom is 1
         self.var_ = X.var(ddof=0) if self.biased_ else X.var(ddof=1)
         self.fitted_ = True
+        return self
 
     def pdf(self, X: np.ndarray) -> np.ndarray:
         """
@@ -150,6 +151,8 @@ class MultivariateGaussian:
         """
         self.mu_ = np.mean(X, axis=0)
         self.cov_ = np.cov(X.T, bias=False)  # we use the unbiased estimator
+        self.fitted_ = True
+        return self
 
     def pdf(self, X: np.ndarray):
         """
