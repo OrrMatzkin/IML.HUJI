@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import NoReturn
-from ...base import BaseEstimator
+from IMLearn.base import BaseEstimator
 import numpy as np
 from numpy.linalg import pinv
 
@@ -49,7 +49,15 @@ class LinearRegression(BaseEstimator):
         -----
         Fits model with or without an intercept depending on value of `self.include_intercept_`
         """
-        raise NotImplementedError()
+        # todo: check if im suppose to add 1's or make the first column 0's
+        # if the user does not want to include the intercept (w0) we consider it equal to zero
+        if not self.include_intercept_:
+            X[:, 0] = 0
+        u, singular_values, v = np.linalg.svd(X)
+        X_dagger = v.T @ np.diag(1/singular_values) @ u.T
+        self.coefs_ = X_dagger @ y
+
+        return self
 
     def _predict(self, X: np.ndarray) -> np.ndarray:
         """
@@ -85,3 +93,14 @@ class LinearRegression(BaseEstimator):
             Performance under MSE loss function
         """
         raise NotImplementedError()
+
+
+if __name__ == '__main__':
+
+    X = np.array([[4, 0],
+                    [3, -5]])
+
+    y = np.array([4, 13])
+    es = LinearRegression()
+    es.fit(X, y)
+    print(es.coefs_) # should be [1,-2]
