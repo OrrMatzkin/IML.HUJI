@@ -52,12 +52,10 @@ class LinearRegression(BaseEstimator):
         """
         # todo: check if im suppose to add 1's or make the first column 0's
         # if the user does not want to include the intercept (w0) we consider it equal to zero
-        if not self.include_intercept_:
-            X[:, 0] = 0
-        u, singular_values, v = np.linalg.svd(X)
-        X_dagger = v.T @ np.diag(1/singular_values) @ u.T
+        if self.include_intercept_:
+            X = np.insert(X, 0, 1, axis=1)
+        X_dagger = np.linalg.pinv(X)
         self.coefs_ = X_dagger @ y
-
         return self
 
     def _predict(self, X: np.ndarray) -> np.ndarray:
@@ -74,6 +72,8 @@ class LinearRegression(BaseEstimator):
         responses : ndarray of shape (n_samples, )
             Predicted responses of given samples
         """
+        if self.include_intercept_:
+            X = np.insert(X, 0, 1, axis=1)
         return X @ self.coefs_
 
     def _loss(self, X: np.ndarray, y: np.ndarray) -> float:
@@ -97,17 +97,17 @@ class LinearRegression(BaseEstimator):
         return metrics.mean_square_error(y, self._predict(X))
 
 
-if __name__ == '__main__':
-
-    X = np.array([[4, 0],
-                    [3, -5]])
-
-    y = np.array([4, 13])
-    es = LinearRegression()
-    es.fit(X, y)
-    print(y)
-    # print(f"y -> {y}")
-    print(es.coefs_)  # should be [1,-2]
-    # print(f"predict y ->  {es.predict(X)} ")# should be [4,13]
-    print(es.loss(X, y))
-    # print(f"y - predict y -> {np.round(y - es.predict(X))}")
+# if __name__ == '__main__':
+#
+#     X = np.array([[4, 0],
+#                     [3, -5]])
+#
+#     y = np.array([4, 13])
+#     es = LinearRegression()
+#     es.fit(X, y)
+#     print(y)
+#     # print(f"y -> {y}")
+#     print(es.coefs_)  # should be [1,-2]
+#     # print(f"predict y ->  {es.predict(X)} ")# should be [4,13]
+#     print(es.loss(X, y))
+#     # print(f"y - predict y -> {np.round(y - es.predict(X))}")
