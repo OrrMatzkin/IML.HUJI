@@ -5,7 +5,7 @@ from ...base import BaseEstimator
 import numpy as np
 
 
-class PolynomialFitting(LinearRegression):
+class PolynomialFitting(BaseEstimator):
     """
     Polynomial Fitting using Least Squares estimation
     """
@@ -18,7 +18,8 @@ class PolynomialFitting(LinearRegression):
         k : int
             Degree of polynomial to fit
         """
-        super().__init__(include_intercept=False)  # the basis functions defines h1(x)=1 so the intercept is included
+        self.linear_es = LinearRegression(False)
+        super().__init__()  # the basis functions defines h1(x)=1 so the intercept is included
         self.k = k
 
     def _fit(self, X: np.ndarray, y: np.ndarray) -> NoReturn:
@@ -34,7 +35,8 @@ class PolynomialFitting(LinearRegression):
             Responses of input data to fit to
         """
         vand_X = self.__transform(X)
-        super().fit(vand_X, y)
+        self.linear_es.fit(vand_X, y)
+
 
     def _predict(self, X: np.ndarray) -> np.ndarray:
         """
@@ -51,7 +53,7 @@ class PolynomialFitting(LinearRegression):
             Predicted responses of given samples
         """
         vand_X = self.__transform(X)
-        return super().predict(vand_X)
+        return self.linear_es.predict(vand_X)
 
     def _loss(self, X: np.ndarray, y: np.ndarray) -> float:
         """
@@ -71,7 +73,7 @@ class PolynomialFitting(LinearRegression):
             Performance under MSE loss function
         """
         vand_X = self.__transform(X)
-        return super().loss(vand_X, y)
+        return self.linear_es.loss(vand_X, y)
 
     def __transform(self, X: np.ndarray) -> np.ndarray:
         """
