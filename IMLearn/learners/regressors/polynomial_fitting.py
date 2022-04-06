@@ -18,9 +18,8 @@ class PolynomialFitting(BaseEstimator):
         k : int
             Degree of polynomial to fit
         """
-        self.linear_es = LinearRegression(False)
         super().__init__()  # the basis functions defines h1(x)=1 so the intercept is included
-        self.k = k
+        self.k, self.linear_es = k, LinearRegression(False)
 
     def _fit(self, X: np.ndarray, y: np.ndarray) -> NoReturn:
         """
