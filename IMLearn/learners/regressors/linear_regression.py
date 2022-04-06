@@ -50,8 +50,6 @@ class LinearRegression(BaseEstimator):
         -----
         Fits model with or without an intercept depending on value of `self.include_intercept_`
         """
-        # todo: check if im suppose to add 1's or make the first column 0's
-        # if the user does not want to include the intercept (w0) we consider it equal to zero
         if self.include_intercept_:
             X = np.insert(X, 0, 1, axis=1)
         X_dagger = np.linalg.pinv(X)
@@ -93,21 +91,4 @@ class LinearRegression(BaseEstimator):
         loss : float
             Performance under MSE loss function
         """
-        # todo: should I round the result ?
         return metrics.mean_square_error(y, self._predict(X))
-
-
-# if __name__ == '__main__':
-#
-#     X = np.array([[4, 0],
-#                     [3, -5]])
-#
-#     y = np.array([4, 13])
-#     es = LinearRegression()
-#     es.fit(X, y)
-#     print(y)
-#     # print(f"y -> {y}")
-#     print(es.coefs_)  # should be [1,-2]
-#     # print(f"predict y ->  {es.predict(X)} ")# should be [4,13]
-#     print(es.loss(X, y))
-#     # print(f"y - predict y -> {np.round(y - es.predict(X))}")
