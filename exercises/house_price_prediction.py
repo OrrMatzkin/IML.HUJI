@@ -1,3 +1,4 @@
+import IMLearn.learners.regressors.linear_regression
 from IMLearn.utils import split_train_test
 from IMLearn.learners.regressors import LinearRegression
 
@@ -7,7 +8,28 @@ import pandas as pd
 import plotly.graph_objects as go
 import plotly.express as px
 import plotly.io as pio
+import os
+
 pio.templates.default = "simple_white"
+
+# todo: remove!
+def _create_zipcodes_data(zipcodes: pd.DataFrame, prices: pd.Series):
+    results = list(tuple())
+    for code in zipcodes:
+        ones = zipcodes[zipcodes[code] == 1]
+        ones_price = pd.concat([ones[code], prices], axis=1).dropna()
+        mean = ones_price["price"].mean()
+        results.append((code, mean))
+    return pd.DataFrame(results)
+
+# todo: remove!
+def _create_zipcodes_data2(zipcodes: pd.DataFrame, prices: pd.Series):
+    df = pd.DataFrame()
+    for code in zipcodes:
+        ones = zipcodes[zipcodes[code] == 1]
+        ones_price = pd.concat([ones[code], prices], axis=1).dropna()
+        df = pd.concat([df, ones_price['price'].rename(code)], axis=1)
+    return df
 
 
 def load_data(filename: str):
@@ -23,7 +45,43 @@ def load_data(filename: str):
     Design matrix and response vector (prices) - either as a single
     DataFrame or a Tuple[DataFrame, Series]
     """
-    raise NotImplementedError()
+    house_data = pd.read_csv(filename)
+
+    house_data = house_data.sort_values(by=['price'])
+    house_data = house_data.dropna()  # removes missing values
+    house_data = house_data[house_data['price'] > 0]  # removes negative or zero prices
+    prices = house_data['price']
+    # removes unnecessary columns
+    house_data = house_data.drop(columns=['price', 'id', 'date', 'lat', 'long', 'sqft_living15', 'sqft_lot15'])
+
+    # one hot encoding zipcode values
+    zipcode_data = _create_zipcodes_data(pd.get_dummies(house_data['zipcode']), prices)
+
+    # print(zipcode_data)
+    # fig = px.histogram(x=zipcode_data[0], y=zipcode_data[1], nbins=zipcode_data.shape[0]).show()
+
+    # added a new feature bedrooms + bathrooms number
+    house_data = pd.concat([house_data, (house_data['bedrooms'] + house_data['bathrooms']).
+                           rename("bedrooms & bathrooms")], axis=1)
+
+    # added a new feature total sqft of house
+    house_data = pd.concat([house_data, (house_data['sqft_above'] + house_data['sqft_basement'] +
+                                         house_data['sqft_living'] + house_data['sqft_lot']).
+                           rename("sqft_garden")], axis=1)
+
+    # added a new feature total year built + renovated
+    house_data = pd.concat([house_data, (house_data['yr_built'] + house_data['yr_renovated']).
+                           rename("year built + renovated")], axis=1)
+
+    # low corr todo:remove!
+    # house_data = pd.concat([house_data, (house_data['condition'] > 2).rename('good_condition')], axis=1)
+    house_data = pd.concat([house_data, pd.get_dummies(house_data['zipcode'])], axis=1)
+    # house_data = pd.concat([house_data, pd.get_dummies(house_data['good_condition'])], axis=1)
+
+    # print(house_data)
+    # print(prices)
+
+    return house_data, prices
 
 
 def feature_evaluation(X: pd.DataFrame, y: pd.Series, output_path: str = ".") -> NoReturn:
@@ -43,19 +101,34 @@ def feature_evaluation(X: pd.DataFrame, y: pd.Series, output_path: str = ".") ->
     output_path: str (default ".")
         Path to folder in which plots are saved
     """
-    raise NotImplementedError()
+
+    # creates the directory if not already exist
+    if output_path != "." and not os.path.exists(output_path):
+        os.makedirs(output_path)
+
+    for feature in X:
+        cov = np.cov(X[feature], y)
+        dev_X, dev_y = np.std(X[feature]), np.std(y)
+        p_corr = (cov / (dev_X * dev_y))[0, 1]  # we take the (0,1) index of the correlation matrix [[XX, XY], [YX,YY]]
+        fig_title = f"House price vs {feature} - Pearson Correlation: {p_corr}"
+
+        fig = go.Figure(go.Scatter(x=X[feature], y=y, mode='markers'),
+                        layout=go.Layout(title=fig_title, xaxis_title=feature, yaxis_title="price"))
+        fig.write_image(f"{output_path}/{fig_title}.png")
+        print(fig_title)
 
 
 if __name__ == '__main__':
     np.random.seed(0)
     # Question 1 - Load and preprocessing of housing prices dataset
-    raise NotImplementedError()
+    X, y = load_data("../datasets/house_prices.csv")
+    # print(X)
 
     # Question 2 - Feature evaluation with respect to response
-    raise NotImplementedError()
+    feature_evaluation(X, y, "figures")
 
-    # Question 3 - Split samples into training- and testing sets.
-    raise NotImplementedError()
+    # # Question 3 - Split samples into training- and testing sets.
+    train_X, train_y, test_X, test_y = split_train_test(X, y, train_proportion=0.75)
 
     # Question 4 - Fit model over increasing percentages of the overall training data
     # For every percentage p in 10%, 11%, ..., 100%, repeat the following 10 times:
@@ -64,4 +137,27 @@ if __name__ == '__main__':
     #   3) Test fitted model over test set
     #   4) Store average and variance of loss over test set
     # Then plot average loss as function of training size with error ribbon of size (mean-2*std, mean+2*std)
-    raise NotImplementedError()
+    #
+    es = LinearRegression()
+    percentage_loss_data = pd.DataFrame()
+    p_percentage = []
+    for p in range(10, 101):
+        loss = []
+        for _ in range(10):
+            sample_X = train_X.sample(frac=p/100)
+            sample_y = train_y.reindex_like(sample_X)
+            es.fit(sample_X.to_numpy(), sample_y.to_numpy())
+            loss.append(es.loss(test_X.to_numpy(), test_y.to_numpy()))
+        p_loss = pd.DataFrame({p: loss})
+        percentage_loss_data = pd.concat([percentage_loss_data, p_loss], axis=1)
+        p_percentage.append(p)
+
+    go.Figure([go.Scatter(x=p_percentage, y=percentage_loss_data.mean(), mode="markers+lines", name="Mean Loss",
+                          marker=dict(color="green", opacity=.7)),
+               go.Scatter(x=p_percentage, y=percentage_loss_data.mean() - 2 * percentage_loss_data.std(),
+                          fill=None, mode="lines", line=dict(color="lightgrey"), showlegend=False),
+               go.Scatter(x=p_percentage, y=percentage_loss_data.mean() + 2 * percentage_loss_data.std(),
+                          fill='tonexty', mode="lines", line=dict(color="lightgrey"), showlegend=False)],
+              layout=go.Layout(title="Mean loss as a function of percentage of train set used",
+                               xaxis_title="p% of the train set used", yaxis_title=" MSE loss")).show()
+
