@@ -58,7 +58,7 @@ class Perceptron(BaseEstimator):
 
     def _fit(self, X: np.ndarray, y: np.ndarray) -> NoReturn:
         """
-        Fit a halfspace to to given samples. Iterate over given data as long as there exists a sample misclassified
+        Fit a halfspace to given samples. Iterate over given data as long as there exists a sample misclassified
         or that did not reach `self.max_iter_`
 
         Parameters
@@ -73,7 +73,21 @@ class Perceptron(BaseEstimator):
         -----
         Fits model with or without an intercept depending on value of `self.fit_intercept_`
         """
-        raise NotImplementedError()
+        if self.include_intercept_:
+            X = np.insert(X, 0, 1, axis=1)
+
+        m, d = X.shape[0], X.shape[1]
+        misclassified_sample = True
+        curr_iter = 0
+        while misclassified_sample or curr_iter < self.max_iter_:
+            misclassified_sample = False
+            for i in range(m):
+                if y[i] * (self.coefs_ @ X[i]) <= 0:
+                    self.coefs_ += (y[i] * X[i])
+                    misclassified_sample = True
+            curr_iter += 1
+
+
 
     def _predict(self, X: np.ndarray) -> np.ndarray:
         """
