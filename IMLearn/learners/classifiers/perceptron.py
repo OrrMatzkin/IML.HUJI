@@ -77,17 +77,25 @@ class Perceptron(BaseEstimator):
             X = np.insert(X, 0, 1, axis=1)
 
         m, d = X.shape[0], X.shape[1]
+
         misclassified_sample = True
         curr_iter = 0
-        while misclassified_sample or curr_iter < self.max_iter_:
+        self.coefs_ = np.zeros(d)
+
+        while misclassified_sample and curr_iter < self.max_iter_:
             misclassified_sample = False
+            print(curr_iter)
             for i in range(m):
                 if y[i] * (self.coefs_ @ X[i]) <= 0:
                     self.coefs_ += (y[i] * X[i])
                     misclassified_sample = True
+                    # after a single iteration we have already partially fitted the model
+                    if not self.fitted_:
+                        self.fitted_ = True
+                    # calls the callback function
+                    self.callback_(self, X[i], y[i])
+                    break
             curr_iter += 1
-
-
 
     def _predict(self, X: np.ndarray) -> np.ndarray:
         """
