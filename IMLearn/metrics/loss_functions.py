@@ -59,7 +59,17 @@ def accuracy(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     -------
     Accuracy of given predictions
     """
-    raise NotImplementedError()
+    # total true labels of 1
+    P = np.sum(y_true == 1, axis=1)[0]
+    # total true labels of -1
+    N = np.sum(y_true == -1, axis=1)[0]
+    # True Positive: we predict a label of 1, and the true label is 1.
+    TP = np.sum(np.logical_and(y_pred == 1, y_true == 1))
+    # True Negative: we predict a label of -1, and the true label is -1.
+    TN = np.sum(np.logical_and(y_pred == -1, y_true == -1))
+
+    return (TP+TN)/(P+N)
+
 
 
 def cross_entropy(y_true: np.ndarray, y_pred: np.ndarray) -> float:
@@ -78,4 +88,3 @@ def cross_entropy(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     Cross entropy of given predictions
     """
     raise NotImplementedError()
-
