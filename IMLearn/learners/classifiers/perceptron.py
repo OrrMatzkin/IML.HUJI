@@ -113,7 +113,7 @@ class Perceptron(BaseEstimator):
         """
         if self.include_intercept_:
             X = np.insert(X, 0, 1, axis=1)
-        return np.sign(X @ self.coefs_)
+        return np.where(np.sign(X @ self.coefs_) > 0, 1, -1)
 
     def _loss(self, X: np.ndarray, y: np.ndarray) -> float:
         """
