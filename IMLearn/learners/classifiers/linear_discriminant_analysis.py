@@ -46,7 +46,24 @@ class LDA(BaseEstimator):
         y : ndarray of shape (n_samples, )
             Responses of input data to fit to
         """
-        raise NotImplementedError()
+        n_samples, n_features = X.shape
+        self.classes_ = np.unique(y)
+        n_classes = self.classes_.shape[0]
+
+        self.mu_ = np.zeros([n_classes, n_features])
+        self.cov_ = np.zeros([n_features, n_features])
+        self.pi_ = np.zeros(n_classes)
+
+        for i, c in enumerate(self.classes_):
+            # Only select the rows where the label equals the given class
+            X_c = X[y == c]
+            self.mu_[i] = X_c.mean(axis=0)
+            self.pi_[i] = X_c.shape[0] / n_samples
+
+        for i in range(n_samples):
+            self.cov_ += np.outer(X[i] - self.mu_[y[i]], X[i] - self.mu_[y[i]])
+        self.cov_ = self.cov_ / n_samples
+        self._cov_inv = np.linalg.inv(self.cov_)
 
     def _predict(self, X: np.ndarray) -> np.ndarray:
         """
@@ -62,7 +79,13 @@ class LDA(BaseEstimator):
         responses : ndarray of shape (n_samples, )
             Predicted responses of given samples
         """
-        raise NotImplementedError()
+
+        likelihoods = self.likelihood(X)
+        y = []
+        for likelihood in likelihoods:
+            y.append(self.classes_[np.argmax(likelihood)])
+
+        return np.array(y)
 
     def likelihood(self, X: np.ndarray) -> np.ndarray:
         """
@@ -75,14 +98,27 @@ class LDA(BaseEstimator):
 
         Returns
         -------
-        likelihoods : np.ndarray of shape (n_samples, n_classes)
+        likelihoods : np.ndarray of shape (n_samples, n_classes)xq
             The likelihood for each sample under each of the classes
 
         """
         if not self.fitted_:
             raise ValueError("Estimator must first be fitted before calling `likelihood` function")
 
-        raise NotImplementedError()
+        n, d = X.shape
+        z = 1 / np.sqrt(np.power(2*np.pi, d) * np.linalg.det(self.cov_))
+
+        likelihoods = np.zeros([n, self.classes_.shape[0]])
+        for i in range(n):
+            curr_likelihood = []
+            for c in range(len(self.classes_)):
+                x_mu = X[i] - self.mu_[c]
+                exp = -0.5 * x_mu.T @ self._cov_inv @ x_mu
+                curr_likelihood.append(z * np.exp(exp) * self.pi_[c])
+
+            likelihoods[i] = np.array(curr_likelihood)
+
+        return likelihoods
 
     def _loss(self, X: np.ndarray, y: np.ndarray) -> float:
         """
@@ -102,4 +138,4 @@ class LDA(BaseEstimator):
             Performance under missclassification loss function
         """
         from ...metrics import misclassification_error
-        raise NotImplementedError()
+        return misclassification_error(y, self.predict(X))
