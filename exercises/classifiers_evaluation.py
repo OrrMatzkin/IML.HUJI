@@ -83,50 +83,6 @@ def get_ellipse(mu: np.ndarray, cov: np.ndarray):
     return go.Scatter(x=mu[0] + xs, y=mu[1] + ys, mode="lines", marker_color="black", showlegend=False)
 
 
-def update_graph(figure, estimator, X, y, y_pred, col):
-    """
-    Adds to the figure question 3.2.1 asked traces, including:
-    1. 2D scatter-plot of samples
-    2. X Markers indicating the center of fitted Gaussians.
-    3. An ellipsis centered in Gaussian centers and shape dictated by fitted covariance matrix.
-
-    Parameters
-    ----------
-    figure:  Figure
-         current plotly Figure
-
-    estimator: BaseEstimator
-        GaussianNaiveBayes or LDA
-
-    X : ndarray of shape (n_samples, n_features)
-            Data samples
-
-    y : ndarray of shape (n_samples, )
-        Responses values
-
-    y_pred: ndarray of shape (n_samples, )
-        Predicted response values
-
-    col: int
-        the column of the subplots (1 or 2)
-    """
-    # Add samples with marker color indicating predicted class and marker shape indicating true class
-    figure.add_trace(go.Scatter(x=X[:, 0], y=X[:, 1], mode="markers", showlegend=False,
-                             marker=dict(color=y_pred, symbol=y, line=dict(color="grey", width=1))), row=1, col=col)
-
-    # Add `X` dots specifying estimator means
-    figure.add_trace(go.Scatter(x=estimator.mu_[:, 0], y=estimator.mu_[:, 1], mode="markers", showlegend=False,
-                             marker=dict(color='black', symbol='x', size=10,
-                                         line=dict(color="black", width=1))), row=1, col=col)
-
-    # Add ellipses depicting the estimator covariances
-    for k in estimator.classes_:
-        if type(estimator) is GaussianNaiveBayes:
-            figure.add_trace(get_ellipse(estimator.mu_[k], np.diag(estimator.vars_[k])), row=1, col=col)
-        else:
-            figure.add_trace(get_ellipse(estimator.mu_[k], estimator.cov_), row=1, col=col)
-
-
 def compare_gaussian_classifiers():
     """
     Fit both Gaussian Naive Bayes and LDA classifiers on both gaussians1 and gaussians2 datasets
