@@ -39,7 +39,6 @@ def run_perceptron():
     for n, f in [("Linearly Separable", "linearly_separable.npy"),
                  ("Linearly Inseparable", "linearly_inseparable.npy")]:
         # Load dataset
-        print(f"starts {n}")
         X, y = load_dataset(f"../datasets/{f}")
 
         # Fit Perceptron and record loss in each fit iteration
@@ -109,35 +108,29 @@ def compare_gaussian_classifiers():
             f"Gaussian Naive Bayes Classifier <br>Accuracy = {accuracy(y_true=y, y_pred=gnb_pred)}",
             f"LDA Classifier <br>Accuracy = {accuracy(y_true=y, y_pred=lda_pred)}"])
 
-        # update_graph(figure=fig, estimator=gnb, X=X, y=y, y_pred=gnb_pred, col=1)
-        # update_graph(figure=fig, estimator=lda, X=X, y=y, y_pred=lda_pred, col=2)
+        for es, y_predict, col in [(gnb, gnb_pred, 1), (lda, lda_pred, 2)]:
 
-        # Add traces for data-points setting symbols and colors
-        fig.add_trace(go.Scatter(x=X[:, 0], y=X[:, 1], mode="markers", showlegend=False,
-                                 marker=dict(color=gnb_pred, symbol=y, line=dict(color="grey", width=1))), row=1,col=1)
+            # Add traces for data-points setting symbols and colors
+            fig.add_trace(go.Scatter(x=X[:, 0], y=X[:, 1], mode="markers", showlegend=False,
+                                     marker=dict(color=y_predict, symbol=y,
+                                                 line=dict(color="grey", width=1))), row=1, col=col)
 
-        fig.add_trace(go.Scatter(x=X[:, 0], y=X[:, 1], mode="markers", showlegend=False,
-                                 marker=dict(color=lda_pred, symbol=y, line=dict(color="grey", width=1))), row=1, col=2)
+            # Add `X` dots specifying fitted Gaussians' means
+            fig.add_trace(go.Scatter(x=es.mu_[:, 0], y=es.mu_[:, 1], mode="markers", showlegend=False,
+                                     marker=dict(color='black', symbol='x', size=10,
+                                                 line=dict(color="black", width=1))), row=1, col=col)
 
-        # Add `X` dots specifying fitted Gaussians' means
-        fig.add_trace(go.Scatter(x=gnb.mu_[:, 0], y=gnb.mu_[:, 1], mode="markers", showlegend=False,
-                                 marker=dict(color='black', symbol='x', size=10,
-                                             line=dict(color="black", width=1))), row=1, col=1)
-
-        fig.add_trace(go.Scatter(x=lda.mu_[:, 0], y=lda.mu_[:, 1], mode="markers", showlegend=False,
-                                 marker=dict(color='black', symbol='x', size=10,
-                                             line=dict(color="black", width=1))), row=1, col=2)
-
-        # Add ellipses depicting the covariances of the fitted Gaussians
-        for c in gnb.classes_:
-           fig.add_trace(get_ellipse(gnb.mu_[c], np.diag(gnb.vars_[c])), row=1, col=1)
-
-        for c in gnb.classes_:
-            fig.add_trace(get_ellipse(lda.mu_[c], lda.cov_), row=1, col=2)
+            # Add ellipses depicting the covariances of the fitted Gaussians
+            for c in es.classes_:
+                if type(es) is GaussianNaiveBayes:
+                    fig.add_trace(get_ellipse(es.mu_[c], np.diag(es.vars_[c])), row=1, col=col)
+                else:     # es is LDA
+                    fig.add_trace(get_ellipse(es.mu_[c], es.cov_), row=1, col=col)
 
         fig.update_layout(title_text=f"<b>Classifier Comparison </b><br>Dataset: {f}", title_x=0.5, margin_t=100).show()
 
+
 if __name__ == '__main__':
     np.random.seed(0)
-    # run_perceptron()
+    run_perceptron()
     compare_gaussian_classifiers()

@@ -84,7 +84,6 @@ class Perceptron(BaseEstimator):
 
         while misclassified_sample and curr_iter < self.max_iter_:
             misclassified_sample = False
-            print(curr_iter)
             for i in range(m):
                 if y[i] * (self.coefs_ @ X[i]) <= 0:
                     self.coefs_ += (y[i] * X[i])
