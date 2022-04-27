@@ -124,7 +124,7 @@ def compare_gaussian_classifiers():
             for c in es.classes_:
                 if type(es) is GaussianNaiveBayes:
                     fig.add_trace(get_ellipse(es.mu_[c], np.diag(es.vars_[c])), row=1, col=col)
-                else:     # es is LDA
+                else:  # es is LDA
                     fig.add_trace(get_ellipse(es.mu_[c], es.cov_), row=1, col=col)
 
         fig.update_layout(title_text=f"<b>Classifier Comparison </b><br>Dataset: {f}", title_x=0.5, margin_t=100).show()

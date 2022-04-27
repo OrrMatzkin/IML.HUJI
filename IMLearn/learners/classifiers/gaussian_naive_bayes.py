@@ -55,7 +55,7 @@ class GaussianNaiveBayes(BaseEstimator):
             X_c = X[y == c]
             self.mu_[i, :] = X_c.mean(axis=0)
             self.pi_[i] = X_c.shape[0] / n_samples
-            self.vars_[c] = X_c.var(axis=0, ddof=1)
+            self.vars_[c] = X_c.var(axis=0)
 
     def _predict(self, X: np.ndarray) -> np.ndarray:
         """
