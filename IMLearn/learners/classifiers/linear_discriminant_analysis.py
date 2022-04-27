@@ -56,7 +56,7 @@ class LDA(BaseEstimator):
 
         for i, c in enumerate(self.classes_):
             # Only select the rows where the label equals the given class
-            X_c = X[y == c]
+            X_c = X[np.nonzero(y == c)]
             self.mu_[i] = X_c.mean(axis=0)
             self.pi_[i] = X_c.shape[0] / n_samples
 
