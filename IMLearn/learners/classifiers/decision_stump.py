@@ -80,7 +80,20 @@ class DecisionStump(BaseEstimator):
         Feature values strictly below threshold are predicted as `-sign` whereas values which equal
         to or above the threshold are predicted as `sign`
         """
-        raise NotImplementedError()
+
+        # n_samples, n_features = X.shape
+        # y = np.ones(n_samples)
+        # y = self.sign_ * y
+        # y = np.where(X[:self.j_] < self.threshold_, y, -y)
+        # return y
+
+        y = []
+        for x in X:
+            if x[self.j_] < self.threshold_:
+                y.append(-self.sign_)
+            else:
+                y.append(self.sign_)
+        return np.array(y)
 
     def _find_threshold(self, values: np.ndarray, labels: np.ndarray, sign: int) -> Tuple[float, float]:
         """
@@ -144,4 +157,4 @@ class DecisionStump(BaseEstimator):
         loss : float
             Performance under missclassification loss function
         """
-        raise NotImplementedError()
+        return np.sum(np.where(self._predict(X) != y, np.abs(y), 0))[0]
