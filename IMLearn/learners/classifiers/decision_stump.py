@@ -95,7 +95,20 @@ class DecisionStump(BaseEstimator):
         For every tested threshold, values strictly below threshold are predicted as `-sign` whereas values
         which equal to or above the threshold are predicted as `sign`
         """
-        raise NotImplementedError()
+        n_samples = values.shape[0]
+        sorted_values = np.sort(values)
+        sorted_labels = np.take(labels, np.argsort(values))
+        min_thr, min_thr_err = None, None
+        thr_labels = np.ones(n_samples) * sign
+
+        for i in range(n_samples):
+            thr_err = np.sum(np.where(thr_labels != sorted_labels, np.abs(sorted_labels), 0)) / len(sorted_values)
+            if min_thr_err is None or thr_err < min_thr_err:
+                min_thr_err = thr_err
+                min_thr = sorted_values[i]
+            thr_labels[i] = -sign
+
+        return min_thr, min_thr_err
 
     def _loss(self, X: np.ndarray, y: np.ndarray) -> float:
         """
