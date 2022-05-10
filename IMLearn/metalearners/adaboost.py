@@ -60,20 +60,18 @@ class AdaBoost(BaseEstimator):
             curr_model = self.wl_()
             curr_model.fit(X, y * self.D_)
             # compute w_t (curr_weight)
-            prediction = curr_model.predict(X)
-            train_err = np.sum(np.where(prediction != y, self.D_, 0))
+            y_predict = curr_model.predict(X)
+            train_err = np.sum(np.where(y_predict != y, self.D_, 0))
             curr_weight = 0.5 * np.log((1 / train_err) - 1)
             # add both to lists
             models.append(curr_model)
             weights.append(curr_weight)
             # update and normalize the sample weights
-            self.D_ *= np.exp(-y * curr_weight * prediction)
+            self.D_ *= np.exp(-y * curr_weight * y_predict)
             self.D_ /= np.sum(self.D_)
 
         self.models_ = np.array(models)
         self.weights_ = np.array(weights)
-
-
 
     def _predict(self, X):
         """
@@ -89,7 +87,13 @@ class AdaBoost(BaseEstimator):
         responses : ndarray of shape (n_samples, )
             Predicted responses of given samples
         """
-        raise NotImplementedError()
+        n_samples = X.shape[0]
+        y_predict = np.zeros(n_samples)
+
+        for i in range(self.iterations_):
+            y_predict += self.weights_[i] * self.models_[i].predict(X)
+
+        return np.sign(y_predict)
 
     def _loss(self, X: np.ndarray, y: np.ndarray) -> float:
         """
@@ -108,7 +112,8 @@ class AdaBoost(BaseEstimator):
         loss : float
             Performance under missclassification loss function
         """
-        raise NotImplementedError()
+        from IMLearn.metrics import misclassification_error
+        return misclassification_error(np.sign(y), self.predict(X))
 
     def partial_predict(self, X: np.ndarray, T: int) -> np.ndarray:
         """
@@ -127,14 +132,15 @@ class AdaBoost(BaseEstimator):
         responses : ndarray of shape (n_samples, )
             Predicted responses of given samples
         """
-        n_samples = X.shape[0]
-        pred = np.zeros(n_samples)
+        if T > self.iterations_:
+            return np.zeros(X.shape[0])
 
-        for t in range(T):
-            all_preds_of_ht = self.weights_[t] * self.models_[t].predict(X)
-            pred += all_preds_of_ht
+        old_iterations = self.iterations_
+        self.iterations_ = T
+        y_predict = self.predict(X)
+        self.iterations_ = old_iterations
+        return y_predict
 
-        return np.sign(pred)
 
     def partial_loss(self, X: np.ndarray, y: np.ndarray, T: int) -> float:
         """
