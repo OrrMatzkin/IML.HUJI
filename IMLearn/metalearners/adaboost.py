@@ -1,5 +1,5 @@
 import numpy as np
-from ...base import BaseEstimator
+from ..base import BaseEstimator
 from typing import Callable, NoReturn
 
 
@@ -48,7 +48,32 @@ class AdaBoost(BaseEstimator):
         y : ndarray of shape (n_samples, )
             Responses of input data to fit to
         """
-        raise NotImplementedError()
+        n_samples = X.shape[0]
+        models, weights = [], []
+
+        # set initial distribution to be uniform
+        self.D_ = np.ones(n_samples)
+        self.D_ = self.D_ / n_samples
+
+        for t in range(self.iterations_):
+            # fit base learner
+            curr_model = self.wl_()
+            curr_model.fit(X, y * self.D_)
+            # compute w_t (curr_weight)
+            prediction = curr_model.predict(X)
+            train_err = np.sum(np.where(prediction != y, self.D_, 0))
+            curr_weight = 0.5 * np.log((1 / train_err) - 1)
+            # add both to lists
+            models.append(curr_model)
+            weights.append(curr_weight)
+            # update and normalize the sample weights
+            self.D_ *= np.exp(-y * curr_weight * prediction)
+            self.D_ /= np.sum(self.D_)
+
+        self.models_ = np.array(models)
+        self.weights_ = np.array(weights)
+
+
 
     def _predict(self, X):
         """
@@ -102,7 +127,14 @@ class AdaBoost(BaseEstimator):
         responses : ndarray of shape (n_samples, )
             Predicted responses of given samples
         """
-        raise NotImplementedError()
+        n_samples = X.shape[0]
+        pred = np.zeros(n_samples)
+
+        for t in range(T):
+            all_preds_of_ht = self.weights_[t] * self.models_[t].predict(X)
+            pred += all_preds_of_ht
+
+        return np.sign(pred)
 
     def partial_loss(self, X: np.ndarray, y: np.ndarray, T: int) -> float:
         """
@@ -124,4 +156,5 @@ class AdaBoost(BaseEstimator):
         loss : float
             Performance under missclassification loss function
         """
-        raise NotImplementedError()
+        from IMLearn.metrics import misclassification_error
+        return misclassification_error(np.sign(y), self.partial_predict(X, T))
