@@ -56,6 +56,7 @@ class AdaBoost(BaseEstimator):
         self.D_ = self.D_ / n_samples
 
         for t in range(self.iterations_):
+            print(f"fit iteration: {t}")
             # fit base learner
             curr_model = self.wl_()
             curr_model.fit(X, y * self.D_)
@@ -87,13 +88,7 @@ class AdaBoost(BaseEstimator):
         responses : ndarray of shape (n_samples, )
             Predicted responses of given samples
         """
-        n_samples = X.shape[0]
-        y_predict = np.zeros(n_samples)
-
-        for i in range(self.iterations_):
-            y_predict += self.weights_[i] * self.models_[i].predict(X)
-
-        return np.sign(y_predict)
+        return self.partial_predict(X, self.iterations_)
 
     def _loss(self, X: np.ndarray, y: np.ndarray) -> float:
         """
@@ -113,7 +108,7 @@ class AdaBoost(BaseEstimator):
             Performance under missclassification loss function
         """
         from IMLearn.metrics import misclassification_error
-        return misclassification_error(np.sign(y), self.predict(X))
+        return misclassification_error(y, self.predict(X))
 
     def partial_predict(self, X: np.ndarray, T: int) -> np.ndarray:
         """
@@ -132,15 +127,13 @@ class AdaBoost(BaseEstimator):
         responses : ndarray of shape (n_samples, )
             Predicted responses of given samples
         """
-        if T > self.iterations_:
-            return np.zeros(X.shape[0])
+        n_samples = X.shape[0]
+        y_predict = np.zeros(n_samples)
 
-        old_iterations = self.iterations_
-        self.iterations_ = T
-        y_predict = self.predict(X)
-        self.iterations_ = old_iterations
-        return y_predict
+        for i in range(T):
+            y_predict += self.weights_[i] * self.models_[i].predict(X)
 
+        return np.sign(y_predict)
 
     def partial_loss(self, X: np.ndarray, y: np.ndarray, T: int) -> float:
         """
@@ -163,4 +156,4 @@ class AdaBoost(BaseEstimator):
             Performance under missclassification loss function
         """
         from IMLearn.metrics import misclassification_error
-        return misclassification_error(np.sign(y), self.partial_predict(X, T))
+        return misclassification_error(y, self.partial_predict(X, T))
