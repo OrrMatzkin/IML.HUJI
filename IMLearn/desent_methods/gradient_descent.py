@@ -130,7 +130,7 @@ class GradientDescent:
             f.weights_ = old_weights - eta * grad   # new weights of objective (t)
             delta = np.linalg.norm(f.weights_ - old_weights, ord=2)
 
-            self.callback_(weigts=f.weights_, val=f.compute_output(X=X, y=y), grad=grad, t=t, eta=eta, delta=delta)
+            self.callback_(weights=f.weights_, val=f.compute_output(X=X, y=y), grad=grad, t=t, eta=eta, delta=delta)
 
             t += 1
 

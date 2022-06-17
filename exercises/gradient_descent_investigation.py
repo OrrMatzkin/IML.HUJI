@@ -73,12 +73,35 @@ def get_gd_state_recorder_callback() -> Tuple[Callable[[], None], List[np.ndarra
     weights: List[np.ndarray]
         Recorded parameters
     """
-    raise NotImplementedError()
+    weights_ls, values_ls = [], []
+
+    def callback(weights, val, grad, t, eta, delta):
+        weights_ls.append(weights)
+        values_ls.append(val)
+
+    return callback, values_ls, weights_ls
 
 
 def compare_fixed_learning_rates(init: np.ndarray = np.array([np.sqrt(2), np.e / 3]),
                                  etas: Tuple[float] = (1, .1, .01, .001)):
-    raise NotImplementedError()
+    for module in [L1, L2]:
+        callback, values, weights = get_gd_state_recorder_callback()
+        for eta in etas:
+            gd = GradientDescent(learning_rate=FixedLR(eta), callback=callback)
+            gd.fit(f=module(weights=init), X=None, y=None)
+            fg = plot_descent_path(module=module, descent_path=np.array(weights),
+                                   title=f"of {module.__name__} module with learning rate of {eta}")
+            fg.show()
+            go.Figure([go.Scatter(x=np.array(range(len(values))), y=values, mode='lines', name="Ridge Training Error")],
+                      layout=go.Layout(
+                          title=rf"$\textbf{{(3) the {module.__name__} norm as a function of the GD iteration"
+                                f" with learning rate of {eta}}}$",
+                          yaxis_title=dict(text=f"{module.__name__} norm value"),
+                          xaxis_title=dict(text="Iteration"))).show()
+            print(f"The {module.__name__} norm with learning rate of {eta} achieved minimum loss of"
+                  f" {format(min(values), '.10f')}")
+            values.clear()
+            weights.clear()
 
 
 def compare_exponential_decay_rates(init: np.ndarray = np.array([np.sqrt(2), np.e / 3]),
@@ -140,6 +163,6 @@ def fit_logistic_regression():
 
 if __name__ == '__main__':
     np.random.seed(0)
-    compare_fixed_learning_rates()
-    compare_exponential_decay_rates()
-    fit_logistic_regression()
+    # compare_fixed_learning_rates()
+    # compare_exponential_decay_rates()
+    # fit_logistic_regression()
