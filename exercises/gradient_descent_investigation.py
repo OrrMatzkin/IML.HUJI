@@ -92,7 +92,7 @@ def compare_fixed_learning_rates(init: np.ndarray = np.array([np.sqrt(2), np.e /
             fg = plot_descent_path(module=module, descent_path=np.array(weights),
                                    title=f"of {module.__name__} module with learning rate of {eta}")
             fg.show()
-            go.Figure([go.Scatter(x=np.array(range(len(values))), y=values, mode='lines', name="Ridge Training Error")],
+            go.Figure([go.Scatter(x=np.array(range(len(values))), y=values, mode='lines')],
                       layout=go.Layout(
                           title=rf"$\textbf{{(3) the {module.__name__} norm as a function of the GD iteration"
                                 f" with learning rate of {eta}}}$",
@@ -108,13 +108,42 @@ def compare_exponential_decay_rates(init: np.ndarray = np.array([np.sqrt(2), np.
                                     eta: float = .1,
                                     gammas: Tuple[float] = (.9, .95, .99, 1)):
     # Optimize the L1 objective using different decay-rate values of the exponentially decaying learning rate
-    raise NotImplementedError()
+    callback, values, weights = get_gd_state_recorder_callback()
+    gammas_values, gammas_weights = {}, {}
+    for decay_rate in gammas:
+        gd = GradientDescent(learning_rate=ExponentialLR(eta, decay_rate=decay_rate), callback=callback)
+        gd.fit(f=L1(weights=init,), X=None, y=None)
+
+        gammas_values[decay_rate] = values.copy()
+        gammas_weights[decay_rate] = weights.copy()
+
+        print(f"The L1 norm with learning rate of {eta} and decay rate of {decay_rate} achieved minimum loss of"
+              f" {format(min(values), '.10f')}")
+
+        values.clear()
+        weights.clear()
 
     # Plot algorithm's convergence for the different values of gamma
-    raise NotImplementedError()
-
+    min_iteration = min([len(i) for i in gammas_values.values()])
+    go.Figure([go.Scatter(x=np.array(range(len(gammas_values[decay_rate]))), y=gammas_values[decay_rate], mode='lines',
+                          name=decay_rate) for decay_rate in gammas],
+              layout=go.Layout(title=rf"$\textbf{{(5) L1 norm value as a function of the GD iteration"
+                                     f" with learning rate of 0.1 and different decay rate}}$",
+              yaxis_title=dict(text=f"L1 norm value"),
+              xaxis_title=dict(text="Iteration"),
+              legend_title=dict(text="Decay Rate"))).show()
     # Plot descent path for gamma=0.95
-    raise NotImplementedError()
+    for module in [L1, L2]:
+        gd = GradientDescent(learning_rate=ExponentialLR(eta, decay_rate=0.95), callback=callback)
+        gd.fit(f=module(weights=init), X=None, y=None)
+
+        plot_descent_path(module=module, descent_path=np.array(weights),
+                          title=f"of {module.__name__} module with learning rate of {eta} and decay rate of 0.95").show()
+        values.clear()
+        weights.clear()
+
+
+
 
 
 def load_data(path: str = "../datasets/SAheart.data", train_portion: float = .8) -> \
