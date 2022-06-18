@@ -88,7 +88,25 @@ class LogisticRegression(BaseEstimator):
         Fits model using specified `self.optimizer_` passed when instantiating class and includes an intercept
         if specified by `self.include_intercept_
         """
-        raise NotImplementedError()
+        if self.include_intercept_:
+            X = np.insert(X, 0, 1, axis=1)
+
+        init_weights = np.random.normal(0, 1, X.shape[1])
+
+        if self.penalty_ == 'None':
+            module = LogisticModule(init_weights)
+
+        else:
+            if self.penalty_ == 'l1':
+                reg_module = L1
+            else:   # self.penalty_ == 'l2'
+                reg_module = L2
+
+            module = RegularizedModule(fidelity_module=LogisticModule(init_weights),
+                                       regularization_module=reg_module(weights=init_weights),
+                                       lam=self.lam_, include_intercept=self.include_intercept_, weights=init_weights)
+
+        self.coefs_ = self.solver_.fit(f=module, X=X, y=y)
 
     def _predict(self, X: np.ndarray) -> np.ndarray:
         """
@@ -104,7 +122,7 @@ class LogisticRegression(BaseEstimator):
         responses : ndarray of shape (n_samples, )
             Predicted responses of given samples
         """
-        raise NotImplementedError()
+        return np.where(self.predict_proba(X) >= self.alpha_, 1, 0)
 
     def predict_proba(self, X: np.ndarray) -> np.ndarray:
         """
@@ -120,7 +138,10 @@ class LogisticRegression(BaseEstimator):
         probabilities: ndarray of shape (n_samples,)
             Probability of each sample being classified as `1` according to the fitted model
         """
-        raise NotImplementedError()
+        if self.include_intercept_:
+            X = np.insert(X, 0, 1, axis=1)
+
+        return 1 / (1 + np.exp(-1 * (X.T @ self.coefs_)))
 
     def _loss(self, X: np.ndarray, y: np.ndarray) -> float:
         """
@@ -139,4 +160,5 @@ class LogisticRegression(BaseEstimator):
         loss : float
             Performance under misclassification error
         """
-        raise NotImplementedError()
+        from IMLearn.metrics.loss_functions import misclassification_error
+        return misclassification_error(y, self.predict(X))
