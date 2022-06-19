@@ -182,7 +182,7 @@ def load_data(path: str = "../datasets/SAheart.data", train_portion: float = .8)
 
 
 def fit_logistic_regression():
-    # Load and split SA Heard Disease dataset (as numpy)
+    # Load and split SA Heart Disease dataset (as numpy)
     X_train, y_train, X_test, y_test = [data.to_numpy() for data in load_data(train_portion=.8)]
 
     # Plotting convergence rate of logistic regression over SA heart disease data
@@ -232,14 +232,12 @@ def fit_logistic_regression():
             train_errors.append(train_err)
             validation_errors.append(validation_err)
 
-        best_lam_idx = int(np.argmin(validation_errors))
-        best_lam = lambdas[best_lam_idx]
+        best_lam = lambdas[int(np.argmin(validation_errors))]
         lr = LogisticRegression(solver=gd, penalty=penalty, alpha=0.5, lam=best_lam)
         lr.fit(X_train, y_train)
         print(f"Results for {penalty} penalty:")
-        print(f"Best lambda value was: {best_lam}")
-        print(f"Error of LogisticRegression with {penalty} Regularization on and optimal lambda on the"
-              f" test set is: {lr.loss(X_test, y_test)}")
+        print(f"Best lambda value: {best_lam}")
+        print(f"Error of LogisticRegression on the test set is: {lr.loss(X_test, y_test)}\n")
 
 
 if __name__ == '__main__':
