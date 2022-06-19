@@ -93,7 +93,7 @@ class LogisticRegression(BaseEstimator):
 
         init_weights = np.random.normal(0, 1, X.shape[1])
 
-        if self.penalty_ == 'None':
+        if self.penalty_ == 'none':
             module = LogisticModule(init_weights)
 
         else:
@@ -141,7 +141,7 @@ class LogisticRegression(BaseEstimator):
         if self.include_intercept_:
             X = np.insert(X, 0, 1, axis=1)
 
-        return 1 / (1 + np.exp(-1 * (X.T @ self.coefs_)))
+        return 1 / (1 + np.exp(-1 * (X @ self.coefs_)))
 
     def _loss(self, X: np.ndarray, y: np.ndarray) -> float:
         """
