@@ -86,7 +86,7 @@ def cross_entropy(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     -------
     Cross entropy of given predictions
     """
-    return -np.sum(y_true * np.log(y_pred)) / y_true.shape[0]
+    return -np.sum(y_true * np.log(y_pred))
 
 
 def softmax(X: np.ndarray) -> np.ndarray:

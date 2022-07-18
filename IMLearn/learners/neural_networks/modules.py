@@ -70,7 +70,7 @@ class FullyConnectedLayer(BaseModule):
             Value of function at point self.weights
         """
         if self.include_intercept_:
-            X = np.insert(X, 0, 1, axis=1)
+            X = np.concatenate((np.ones((X.shape[0], 1)), X), axis=1)
         return self.activation_.compute_output(X=self.weights_ @ X, **kwargs)
 
     def compute_jacobian(self, X: np.ndarray, **kwargs) -> np.ndarray:
@@ -88,7 +88,7 @@ class FullyConnectedLayer(BaseModule):
             Derivative with respect to self.weights at point self.weights
         """
         if self.include_intercept_:
-            X = np.insert(X, 0, 1, axis=1)
+            X = np.concatenate((np.ones((X.shape[0], 1)), X), axis=1)
         return self.activation_.compute_jacobian(X=self.weights_ @ X, **kwargs)
 
 
@@ -127,9 +127,7 @@ class ReLU(BaseModule):
         output: ndarray of shape (n_samples,)
             Element-wise derivative of ReLU with respect to given data
         """
-        X[X >= 0] = 1
-        X[X < 0] = 0
-        return X
+        return np.where(X <= 0, 0, 1)
 
 
 class CrossEntropyLoss(BaseModule):
@@ -156,7 +154,12 @@ class CrossEntropyLoss(BaseModule):
         output: ndarray of shape (n_samples,)
             cross-entropy loss value of given X and y
         """
-        raise NotImplementedError()
+        ce = []
+        for i, x in enumerate(X):
+            e_k = np.zeros(X.shape[1])
+            e_k[y[i]] = 1
+            ce.append(cross_entropy(y_true=e_k, y_pred=softmax(x)))
+        return np.array(ce)
 
     def compute_jacobian(self, X: np.ndarray, y: np.ndarray, **kwargs) -> np.ndarray:
         """
@@ -175,4 +178,4 @@ class CrossEntropyLoss(BaseModule):
         output: ndarray of shape (n_samples, input_dim)
             derivative of cross-entropy loss with respect to given input
         """
-        raise NotImplementedError()
+        return softmax(X) - y
