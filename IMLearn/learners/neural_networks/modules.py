@@ -10,7 +10,7 @@ class FullyConnectedLayer(BaseModule):
     Attributes:
     -----------
     input_dim_: int
-        Size of input to layer (number of neurons in preceding layer
+        Size of input to layer (number of neurons in preceding layer)
 
     output_dim_: int
         Size of layer output (number of neurons in layer_)
@@ -48,7 +48,10 @@ class FullyConnectedLayer(BaseModule):
         Weights are randomly initialized following N(0, 1/input_dim)
         """
         super().__init__()
-        raise NotImplementedError()
+        self.weights_ = np.random.normal(0, 1/input_dim, size=input_dim + 1 if include_intercept else input_dim)
+        self.activation_ = activation
+        self.output_dim_ = output_dim
+        self.include_intercept_ = include_intercept
 
     def compute_output(self, X: np.ndarray, **kwargs) -> np.ndarray:
         """
@@ -65,7 +68,9 @@ class FullyConnectedLayer(BaseModule):
         output: ndarray of shape (n_samples, output_dim)
             Value of function at point self.weights
         """
-        raise NotImplementedError()
+        if self.include_intercept_:
+            X = np.insert(X, 0, 1, axis=1)
+        return self.activation_.compute_output(X=self.weights_ @ X, **kwargs)
 
     def compute_jacobian(self, X: np.ndarray, **kwargs) -> np.ndarray:
         """
@@ -81,7 +86,9 @@ class FullyConnectedLayer(BaseModule):
         output: ndarray of shape (input_dim, n_samples)
             Derivative with respect to self.weights at point self.weights
         """
-        raise NotImplementedError()
+        if self.include_intercept_:
+            X = np.insert(X, 0, 1, axis=1)
+        return self.activation_.compute_jacobian(X=self.weights_ @ X, **kwargs)
 
 
 class ReLU(BaseModule):
