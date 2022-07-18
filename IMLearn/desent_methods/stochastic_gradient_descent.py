@@ -58,7 +58,11 @@ class StochasticGradientDescent:
             Callable function receives as input any argument relevant for the current GD iteration. Arguments
             are specified in the `GradientDescent.fit` function
         """
-        raise NotImplementedError()
+        self.learning_rate_ = learning_rate
+        self.tol_ = tol
+        self.max_iter_ = max_iter
+        self.batch_size_ = batch_size
+        self.callback_ = callback
 
     def fit(self, f: BaseModule, X: np.ndarray, y: np.ndarray):
         """
@@ -107,7 +111,22 @@ class StochasticGradientDescent:
             - batch_indices: np.ndarray of shape (n_batch,)
                 Sample indices used in current SGD iteration
         """
-        raise NotImplementedError()
+        t = 0
+        n_samples = X.shape[0]
+
+        old_weights = None
+        delta = np.inf
+        while t < self.max_iter_ and delta > self.tol_:
+            old_weights = f.weights_  # old weights of objective (t-1)
+            batch_index = np.random.choice(n_samples, self.batch_size_, replace=False)
+            value, grad, eta = self._partial_fit(f=f, X=X[batch_index], y=y[batch_index], t=t)
+
+            delta = np.linalg.norm(f.weights_ - old_weights, ord=2)
+
+            self.callback_(solver=self, weights=f.weights_, val=value, grad=grad, t=t, eta=eta, delta=delta,
+                           batch_indices=batch_index)
+            t += 1
+        return f.weights_
 
     def _partial_fit(self, f: BaseModule, X: np.ndarray, y: np.ndarray, t: int) -> Tuple[np.ndarray, np.ndarray, float]:
         """
@@ -138,4 +157,10 @@ class StochasticGradientDescent:
         eta: float
             learning rate used at current iteration
         """
-        raise NotImplementedError()
+        value = f.compute_output(X=X, y=y)
+        grad = f.compute_jacobian(X=X, y=y)
+        eta = self.learning_rate_.lr_step(t=t)
+
+        f.weights -= eta * grad
+
+        return value, grad, eta
