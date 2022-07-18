@@ -58,4 +58,6 @@ def confusion_matrix(a: np.ndarray, b: np.ndarray) -> np.ndarray:
         A confusion matrix where the value of the i,j index shows the number of times value `i` was found in vector `a`
         while value `j` vas found in vector `b`
     """
-    raise NotImplementedError()
+    cm = np.zeros((a.shape[0], b.shape[0]), dtype=int)
+    np.add.at(cm, (a, b), 1)
+    return cm
