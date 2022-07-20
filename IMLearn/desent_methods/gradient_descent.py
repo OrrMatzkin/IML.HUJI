@@ -121,7 +121,7 @@ class GradientDescent:
         """
         t = 0
         delta = np.inf
-        values, weights = [f.compute_output(X=X, y=y)], [f.weights_]
+        values, weights = [f.compute_output(X=X, y=y)], [f.weights]
         while t < self.max_iter_ and delta > self.tol_:
             eta = self.learning_rate_.lr_step(t=t)
             grad = f.compute_jacobian(X=X, y=y)
