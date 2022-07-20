@@ -101,16 +101,29 @@ if __name__ == '__main__':
         samples_per_class=500, n_features=n_features, n_classes=n_classes, train_proportion=0.8)
     lims = np.array([np.r_[train_X, test_X].min(axis=0), np.r_[train_X, test_X].max(axis=0)]).T + np.array([-.1, .1])
 
-    go.Figure(data=[go.Scatter(x=train_X[:, 0], y=train_X[:, 1], mode='markers',
-                               marker=dict(color=train_y, colorscale=custom, line=dict(color="black", width=1)))],
-              layout=go.Layout(title=r"$\text{Train Data}$", xaxis=dict(title=r"$x_1$"), yaxis=dict(title=r"$x_2$"),
-                               width=400, height=400))\
-        .write_image(f"../figures/nonlinear_data.png")
+    # go.Figure(data=[go.Scatter(x=train_X[:, 0], y=train_X[:, 1], mode='markers',
+    #                            marker=dict(color=train_y, colorscale=custom, line=dict(color="black", width=1)))],
+    #           layout=go.Layout(title=r"$\text{Train Data}$", xaxis=dict(title=r"$x_1$"), yaxis=dict(title=r"$x_2$"),
+    #                            width=400, height=400)).show()
+
+
+        # .write_image(f"../figures2/nonlinear_data.png")
 
     # ---------------------------------------------------------------------------------------------#
     # Question 1: Fitting simple network with two hidden layers                                    #
     # ---------------------------------------------------------------------------------------------#
-    raise NotImplementedError()
+    network_layers = [FullyConnectedLayer(input_dim=n_features, output_dim=16, activation=ReLU()),
+                      FullyConnectedLayer(input_dim=16, output_dim=16, activation=ReLU()),
+                      FullyConnectedLayer(input_dim=16, output_dim=n_classes)]
+
+    neural_network = NeuralNetwork(modules=network_layers,
+                                   loss_fn=CrossEntropyLoss(),
+                                   solver=GradientDescent(learning_rate=FixedLR(0.1), max_iter=5000))
+
+    neural_network.fit(train_X, train_y)
+
+    p = plot_decision_boundary(neural_network, lims, X=test_X, y=test_y, title="test")
+    p.show()
 
     # ---------------------------------------------------------------------------------------------#
     # Question 2: Fitting a network with no hidden layers                                          #
