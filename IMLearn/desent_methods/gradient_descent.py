@@ -126,15 +126,15 @@ class GradientDescent:
             eta = self.learning_rate_.lr_step(t=t)
             grad = f.compute_jacobian(X=X, y=y)
 
-            old_weights = f.weights_   # old weights of objective (t-1)
-            f.weights_ = old_weights - eta * grad   # new weights of objective (t)
-            delta = np.linalg.norm(f.weights_ - old_weights, ord=2)
+            old_weights = f.weights   # old weights of objective (t-1)
+            f.weights = old_weights - eta * grad   # new weights of objective (t)
+            delta = np.linalg.norm(f.weights - old_weights, ord=2)
 
-            self.callback_(weights=f.weights_, val=f.compute_output(X=X, y=y), grad=grad, t=t, eta=eta, delta=delta)
+            self.callback_(weights=f.weights, val=f.compute_output(X=X, y=y), grad=grad, t=t, eta=eta, delta=delta)
 
             t += 1
 
-            weights.append(f.weights_)
+            weights.append(f.weights)
             values.append(f.compute_output(X=X, y=y))
 
         if self.out_type_ == "last":
