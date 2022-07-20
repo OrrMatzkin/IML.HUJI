@@ -49,8 +49,10 @@ class FullyConnectedLayer(BaseModule):
         Weights are randomly initialized following N(0, 1/input_dim)
         """
         super().__init__()
-        self.weights_ = np.random.normal(0, 1 / input_dim, size=input_dim + 1 if include_intercept else input_dim)
+        weights_input_dim = input_dim + 1 if include_intercept else input_dim
+        self.weights_ = np.random.normal(0, 1 / weights_input_dim, size=(weights_input_dim, output_dim))
         self.activation_ = activation
+        self.input_dim_ = input_dim
         self.output_dim_ = output_dim
         self.include_intercept_ = include_intercept
 
@@ -71,7 +73,10 @@ class FullyConnectedLayer(BaseModule):
         """
         if self.include_intercept_:
             X = np.concatenate((np.ones((X.shape[0], 1)), X), axis=1)
-        return self.activation_.compute_output(X=self.weights_ @ X, **kwargs)
+        if self.activation_ is None:
+            return X @ self.weights_
+        else:
+            return self.activation_.compute_output(X=X @ self.weights_, **kwargs)
 
     def compute_jacobian(self, X: np.ndarray, **kwargs) -> np.ndarray:
         """
@@ -89,7 +94,10 @@ class FullyConnectedLayer(BaseModule):
         """
         if self.include_intercept_:
             X = np.concatenate((np.ones((X.shape[0], 1)), X), axis=1)
-        return self.activation_.compute_jacobian(X=self.weights_ @ X, **kwargs)
+        if self.activation_ is None:
+            return X
+        else:
+            return self.activation_.compute_jacobian(X=X, **kwargs)
 
 
 class ReLU(BaseModule):
@@ -178,4 +186,7 @@ class CrossEntropyLoss(BaseModule):
         output: ndarray of shape (n_samples, input_dim)
             derivative of cross-entropy loss with respect to given input
         """
-        return softmax(X) - y
+        s = softmax(X)
+        y_encode = np.zeros_like(s)
+        y_encode[np.arange(s.shape[0]), y] = 1    # one-hot encoding
+        return s - y_encode
