@@ -63,7 +63,7 @@ class FullyConnectedLayer(BaseModule):
         Should layer include an intercept or not
     """
 
-    def __init__(self, input_dim: int, output_dim: int, activation: BaseModule = Identity, include_intercept: bool = True):
+    def __init__(self, input_dim: int, output_dim: int, activation: BaseModule = Identity(), include_intercept: bool = True):
         """
         Initialize a module of a fully connected layer
 
