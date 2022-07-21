@@ -117,16 +117,16 @@ class StochasticGradientDescent:
         old_weights = None
         delta = np.inf
         while t < self.max_iter_ and delta > self.tol_:
-            old_weights = f.weights_  # old weights of objective (t-1)
+            old_weights = f.weights  # old weights of objective (t-1)
             batch_index = np.random.choice(n_samples, self.batch_size_, replace=False)
             value, grad, eta = self._partial_fit(f=f, X=X[batch_index], y=y[batch_index], t=t)
 
-            delta = np.linalg.norm(f.weights_ - old_weights, ord=2)
+            delta = np.linalg.norm(f.weights - old_weights, ord=2)
 
-            self.callback_(solver=self, weights=f.weights_, val=value, grad=grad, t=t, eta=eta, delta=delta,
+            self.callback_(solver=self, weights=f.weights, val=value, grad=grad, t=t, eta=eta, delta=delta,
                            batch_indices=batch_index)
             t += 1
-        return f.weights_
+        return f.weights
 
     def _partial_fit(self, f: BaseModule, X: np.ndarray, y: np.ndarray, t: int) -> Tuple[np.ndarray, np.ndarray, float]:
         """
