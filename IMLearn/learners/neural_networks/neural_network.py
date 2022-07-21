@@ -32,6 +32,7 @@ class NeuralNetwork(BaseEstimator, BaseModule):
         self.loss_ = loss_fn
         self.solver_ = solver
         self.pre_activations_, self.post_activations_ = [np.empty(len(self.modules_)+1, dtype=object)] * 2
+        self.probability_vector = None
 
     # region BaseEstimator implementations
     def _fit(self, X: np.ndarray, y: np.ndarray) -> NoReturn:
@@ -62,7 +63,8 @@ class NeuralNetwork(BaseEstimator, BaseModule):
         responses : ndarray of shape (n_samples, )
             Predicted labels of given samples
         """
-        return np.argmax(self.compute_prediction(X=X), axis=1)
+        self.probability_vector = self.compute_prediction(X)
+        return np.argmax(self.probability_vector, axis=1)
 
     def _loss(self, X: np.ndarray, y: np.ndarray) -> float:
         """
