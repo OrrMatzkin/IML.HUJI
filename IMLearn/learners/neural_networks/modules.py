@@ -137,6 +137,43 @@ class ReLU(BaseModule):
         """
         return np.where(X <= 0, 0, 1)
 
+class Identity(BaseModule):
+    """
+        Module of a Identity activation function computing the element-wise function Identity(x)=x
+    """
+
+    def compute_output(self, X: np.ndarray, **kwargs) -> np.ndarray:
+        """
+        Compute element-wise value of activation
+
+        Parameters:
+        -----------
+        X: ndarray of shape (n_samples, input_dim)
+            Input data to be passed through activation
+
+        Returns:
+        --------
+        output: ndarray of shape (n_samples, input_dim)
+            Data after performing the Identity activation function
+        """
+        return X
+
+    def compute_jacobian(self, X: np.ndarray, **kwargs) -> np.ndarray:
+        """
+        Compute module derivative with respect to given data
+
+        Parameters:
+        -----------
+        X: ndarray of shape (n_samples, input_dim)
+            Input data to compute derivative with respect to
+
+        Returns:
+        -------
+        output: ndarray of shape (n_samples,)
+            Element-wise derivative of Identity with respect to given data
+        """
+        return np.ones_like(X)
+
 
 class CrossEntropyLoss(BaseModule):
     """
@@ -162,12 +199,7 @@ class CrossEntropyLoss(BaseModule):
         output: ndarray of shape (n_samples,)
             cross-entropy loss value of given X and y
         """
-        ce = []
-        for i, x in enumerate(X):
-            e_k = np.zeros(X.shape[1])
-            e_k[y[i]] = 1
-            ce.append(cross_entropy(y_true=e_k, y_pred=softmax(x)))
-        return np.array(ce)
+        return cross_entropy(y, softmax(X))
 
     def compute_jacobian(self, X: np.ndarray, y: np.ndarray, **kwargs) -> np.ndarray:
         """
