@@ -3,6 +3,44 @@ from IMLearn.base.base_module import BaseModule
 from IMLearn.metrics.loss_functions import cross_entropy, softmax
 
 
+class Identity(BaseModule):
+    """
+        Module of a Identity activation function computing the element-wise function Identity(x)=x
+    """
+
+    def compute_output(self, X: np.ndarray, **kwargs) -> np.ndarray:
+        """
+        Compute element-wise value of activation
+
+        Parameters:
+        -----------
+        X: ndarray of shape (n_samples, input_dim)
+            Input data to be passed through activation
+
+        Returns:
+        --------
+        output: ndarray of shape (n_samples, input_dim)
+            Data after performing the Identity activation function
+        """
+        return X
+
+    def compute_jacobian(self, X: np.ndarray, **kwargs) -> np.ndarray:
+        """
+        Compute module derivative with respect to given data
+
+        Parameters:
+        -----------
+        X: ndarray of shape (n_samples, input_dim)
+            Input data to compute derivative with respect to
+
+        Returns:
+        -------
+        output: ndarray of shape (n_samples,)
+            Element-wise derivative of Identity with respect to given data
+        """
+        return np.ones_like(X)
+
+
 class FullyConnectedLayer(BaseModule):
     """
     Module of a fully connected layer in a neural network
@@ -25,7 +63,7 @@ class FullyConnectedLayer(BaseModule):
         Should layer include an intercept or not
     """
 
-    def __init__(self, input_dim: int, output_dim: int, activation: BaseModule = None, include_intercept: bool = True):
+    def __init__(self, input_dim: int, output_dim: int, activation: BaseModule = Identity, include_intercept: bool = True):
         """
         Initialize a module of a fully connected layer
 
@@ -136,43 +174,6 @@ class ReLU(BaseModule):
             Element-wise derivative of ReLU with respect to given data
         """
         return np.where(X <= 0, 0, 1)
-
-class Identity(BaseModule):
-    """
-        Module of a Identity activation function computing the element-wise function Identity(x)=x
-    """
-
-    def compute_output(self, X: np.ndarray, **kwargs) -> np.ndarray:
-        """
-        Compute element-wise value of activation
-
-        Parameters:
-        -----------
-        X: ndarray of shape (n_samples, input_dim)
-            Input data to be passed through activation
-
-        Returns:
-        --------
-        output: ndarray of shape (n_samples, input_dim)
-            Data after performing the Identity activation function
-        """
-        return X
-
-    def compute_jacobian(self, X: np.ndarray, **kwargs) -> np.ndarray:
-        """
-        Compute module derivative with respect to given data
-
-        Parameters:
-        -----------
-        X: ndarray of shape (n_samples, input_dim)
-            Input data to compute derivative with respect to
-
-        Returns:
-        -------
-        output: ndarray of shape (n_samples,)
-            Element-wise derivative of Identity with respect to given data
-        """
-        return np.ones_like(X)
 
 
 class CrossEntropyLoss(BaseModule):
